@@ -348,7 +348,7 @@
     }
     .main_part {
       background-color: rgb(244, 243, 243);
-      flex-grow: 8;
+      flex-grow: 80;
     }
     .class-info {
         margin-top: 20px;

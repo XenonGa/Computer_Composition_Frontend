@@ -4,7 +4,7 @@
         <div class="title">
           计算机硬件基础课程管理平台
         </div>
-        <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
+        <!-- <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
           <el-menu-item index="1">处理中心</el-menu-item>
           <el-submenu index="2">
             <template slot="title">我的工作台</template>
@@ -20,7 +20,7 @@
           </el-submenu>
           <el-menu-item index="3">消息中心</el-menu-item>
           <el-menu-item index="4"><a href="https://www.ele.me" target="_blank">订单管理</a></el-menu-item>
-        </el-menu>
+        </el-menu> -->
       </div>
     </div>
     
@@ -45,6 +45,7 @@
     .header {
       display: flex;
       box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      height: 60px;
     }
     .title{
       flex-grow: 1;
