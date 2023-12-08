@@ -88,17 +88,29 @@
                         </el-option>
                     </el-select>
                 </div>
-
                 <div class="create-class-row">
+                    <div class="class-title">
+                        生成随机考生名单
+                    </div>
+                    <el-switch
+                      v-model="addTestInfo.isRandom"
+                      active-color="#13ce66"
+                      inactive-color="#ff4949"
+                      class="switch">
+                    </el-switch>
+                </div>
+
+                <div class="create-class-row" v-if="addTestInfo.isRandom">
                     <div class="class-title">
                         考场数
                     </div>
                     <el-input-number v-model="addTestInfo.testRoomNum" :min="1" :max="20" label="描述文字"></el-input-number>
                 </div>
+                
 
                     <div slot="footer" class="dialog-footer">
                     <el-button @click="addTestVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="createTest">确认添加</el-button>
+                    <el-button type="primary" @click="deliverCreateTest">确认添加</el-button>
                 </div>
             </el-dialog>
         </div>
@@ -165,6 +177,7 @@
             testTime: '',
             testClass: '',
             testRoomNum: 0,
+            isRandom: true,
           },
           removeTestInfo: {
             testID: 0,
@@ -232,9 +245,8 @@
               console.log(error);
             });
         },
-
-        createTest() {
-            if(this.addTestInfo.testName === '') {
+        deliverCreateTest() {
+          if(this.addTestInfo.testName === '') {
             this.$message.error('考试名不得为空！');
             return;
             }
@@ -246,6 +258,54 @@
             this.$message.error('考试班级不得为空！');
             return;
             }
+          if(this.addTestInfo.isRandom) this.createTest();
+          else this.createPureTest();
+        },
+        createPureTest() {
+          var dateString = moment(this.addTestInfo.testTime).format('YYYY-MM-DD HH:mm:ss');
+            const send_message_to_backend = JSON.stringify({
+              name: this.addTestInfo.testName,
+              time: dateString,
+              join_class: this.testClass
+            });
+
+            var allTestClass = '';
+            for(var i = 0; i < this.testClass.length; i++) {
+              if(i != 0) {
+                allTestClass += '、';
+              }
+              for(var j = 0; j < this.classes.length; j++) {
+                if(this.testClass[i] === this.classes[j].class_id) {
+                  allTestClass += this.classes[j].value;
+                }
+              }
+            }
+            const addMessage = {
+                testName: this.addTestInfo.testName,
+                testTime: dateString,
+                testClass: allTestClass,
+                testRoomNum: 0
+            };
+            var _this = this;
+            this.$api.exam.postExam_createPure(send_message_to_backend) 
+            .then(function (response) {
+              console.log(response);
+              _this.addTestInfo.testName = '';
+              _this.addTestInfo.testTime = '';
+              _this.addTestInfo.testClass = '';
+              _this.addTestInfo.testRoomNum = '';
+              _this.tableData.push(addMessage);
+              _this.$message({
+              message: '添加考试成功',
+              type: 'success'
+              });
+              _this.addTestVisible = false;
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        },
+        createTest() {
             var dateString = moment(this.addTestInfo.testTime).format('YYYY-MM-DD HH:mm:ss');
             const send_message_to_backend = JSON.stringify({
               name: this.addTestInfo.testName,
@@ -422,6 +482,8 @@
       margin-left: 50px;
       margin-bottom: 20px;
     }
-  
+    .switch {
+      margin-top: 20px;
+    }
   </style>
   

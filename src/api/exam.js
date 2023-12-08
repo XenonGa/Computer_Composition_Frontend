@@ -7,6 +7,13 @@ export function postExam_create(data) {
         data,
     })
 }
+export function postExam_createPure(data) {
+    return request({
+        method: 'POST',
+        url: `/myapp/create_pure_exam`,
+        data,
+    })
+}
 
 export function postExam_getAll(data) {
     return request({
@@ -78,5 +85,14 @@ export function postExam_downloadStudentInfo(data) {
         url: `/myapp/export_exam_room_list`,
         data,
         responseType: 'blob'
+    })
+}
+
+export function postExam_addNewExamRoom(data) {
+    return request({
+        method: 'POST',
+        url: `/myapp/add_new_exam_room`,
+        data,
+        headers: { 'Content-Type': 'multipart/form-data' }
     })
 }

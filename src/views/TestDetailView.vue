@@ -21,7 +21,8 @@
                     考场数：{{ testInfo.testRoomNum }}
                 </div>
                 <el-button type="info" round class="class-info-button" @click="allocationVisible = true">为该考试分配考场</el-button>
-            </div>
+                <el-button type="primary" round style="margin-left: 30px;" @click="uploadVisible = true">导入学生名单</el-button>
+              </div>
             <div class="before-table">
                 <div class="table-title">
                     座位分布  
@@ -39,7 +40,7 @@
                     
                     <el-button type="success" round style="margin-left: 50px;" @click="selectClassroom">选择考场</el-button>
                     <el-button type="info" round style="margin-left: 30px;" @click="setInfoVisible = true">设置信息</el-button>
-                    <el-button type="primary" round style="margin-left: 30px;" @click="beginInvigilating">开始监考</el-button>
+                    <el-button type="primary" round style="margin-left: 30px;" @click="startInterval">开始监考</el-button>
                     <el-button type="primary" round style="margin-left: 30px;" @click="downloadStudentInfo">导出学生名单</el-button>
                   </div>
                 <div class="draw_table" :style="{ width: tableWidth }">
@@ -86,11 +87,28 @@
         </el-dialog>
         </div>
 
+        <div class="create-class-dialog">
+        <el-dialog title="导入学生名单" :visible.sync="uploadVisible">
+
+            <div class="create-class-row">
+                <div class="classroom-title" style="width: 100px;">
+                    设置ID:
+                </div>
+                <el-input v-model="setRoomID" placeholder="Room ID"></el-input>
+            </div>
+
+            <div slot="footer" class="dialog-footer">
+            <el-button @click="uploadVisible = false">取 消</el-button>
+            <el-button type="primary" @click="openFileManager">导入文件</el-button>
+            </div>
+        </el-dialog>
+        </div>
+
         <div class="set-info">
           <el-dialog title="设置" :visible.sync="setInfoVisible">
             <div class="create-class-row">
               <div class="class-title">
-                cookie
+                JSESSIONID
               </div>
               <el-input v-model="setInfo.cookie" placeholder="cookie"></el-input>
             </div>
@@ -108,11 +126,17 @@
             </div>
             <div class="create-class-row">
               <div class="class-title">
-                judge平台考场号（以逗号分隔）
+                judge平台考场号(CourseID)（以逗号分隔）
               </div>
               <el-input v-model="setInfo.judgeExamID" placeholder="judge平台考场号"></el-input>
             </div>
 
+            <div class="create-class-row">
+              <div class="class-title">
+                judge平台班级号(CourseFlag)（与考场号对应）
+              </div>
+              <el-input v-model="setInfo.judgeCourseFlag" placeholder="judge平台CourseFlag"></el-input>
+            </div>
 
               <div slot="footer" class="dialog-footer">
               <el-button @click="setInfoVisible = false">取 消</el-button>
@@ -122,6 +146,9 @@
         </div>
     </div>
 
+    <div>
+        <input type="file" ref="fileInput" style="display: none" @change="uploadStudentInfo">
+    </div>
     </div>
     
   
@@ -161,12 +188,16 @@
           removeIndex: 0,
           allocationVisible: false,
           setInfoVisible: false,
+          uploadVisible: false,
+          intervalId: null,
           setInfo: {
             cookie: '',
             lvt: '',
             lpvt: '',
             judgeExamID: '',
-            examIDList: []
+            judgeCourseFlag: '',
+            examIDList: [],
+            courseFlagList: []
           },
           testInfo: {
 
@@ -181,10 +212,21 @@
           studentSeatInfo: [],
           selectedExactRoom: '',
           selectedExactRoomCase: '',
+          setRoomID: '',
         };
         
       },
+      beforeRouteLeave(to, from, next) {
+        clearInterval(this.intervalId);
+        next();
+      },
       methods: {
+        startInterval() {
+          this.beginInvigilating();
+          this.intervalId = setInterval(() => {
+            this.beginInvigilating();
+          }, 10000);
+        },
         initCheckTest() {
           const data = localStorage.getItem('checkTestInfo');
           if (data) {
@@ -367,13 +409,18 @@
           if(this.setInfo.judgeExamID !== '') {
             const regex = /\d+/g;
             const result = this.setInfo.judgeExamID.match(regex);
-            console.log(result);
+            // console.log(result);
             this.setInfo.examIDList = result.map(Number);
+            // console.log(this.setInfo.examIDList);
+            const result2 = this.setInfo.judgeCourseFlag.match(regex);
+            this.setInfo.courseFlagList = result2.map(Number);
             console.log(this.setInfo.examIDList);
+            console.log(this.setInfo.courseFlagList);
             const data = {
-              examIDList: this.setInfo.examIDList
+              examIDList: this.setInfo.examIDList,
+              courseFlagList: this.setInfo.courseFlagList
             };
-            localStorage.setItem('examIDList', JSON.stringify(data));
+            localStorage.setItem('IDAndCourseFlag', JSON.stringify(data));
 
             this.$message({
               message: '设置judge考场成功',
@@ -392,12 +439,13 @@
             roomIDList.push(this.roomInfo[i].examRoomID);
           }
           console.log(roomIDList);
-          const data = localStorage.getItem('examIDList');
+          const data = localStorage.getItem('IDAndCourseFlag');
           const list = JSON.parse(data);
           console.log(list.examIDList);
 
           const send_message_to_backend = JSON.stringify({
                 "exam_id_list": list.examIDList,
+                "course_id_list": list.courseFlagList,
                 "er_id_list": roomIDList
             });
             var _this = this;
@@ -406,16 +454,16 @@
                   console.log(response);
                   for(var i = 0; i < response.data.submit_message.length; i++) {
                     if(response.data.submit_message[i].room_num === _this.selectedExactRoom) {
-                        console.log('1111');
+                        // console.log('1111');
                         if(response.data.submit_message[i].score !== '0.00') {
-                          console.log('2222');            
+                          // console.log('2222');        
                           var flag = false;  
                           if(response.data.submit_message[i].score === '10.00') {
                             flag = true;
                           } 
                           for(var j = 0; j < _this.row * _this.column; j++) {
                               if(_this.seatArray[j].num === response.data.submit_message[i].seat_num) {
-                                console.log('3333');   
+                                // console.log('3333');   
                                 _this.seatArray[j].statement = 
                                   response.data.submit_message[i].score + "分";
                                 _this.seatArray[j].isSubmitted = flag;
@@ -451,6 +499,36 @@
                   console.log(error);
               });
         },
+        openFileManager() {
+          this.$refs.fileInput.click();
+        },
+        async uploadStudentInfo() {
+          const room_id = this.setRoomID;
+          const exam_id = this.testInfo.testID; 
+          const file = this.$refs.fileInput.files[0]; // 获取文件输入框中选择的文件
+
+          const formData = new FormData();
+          formData.append('room_num', room_id);
+          formData.append('exam_id', exam_id);
+          console.log(exam_id);
+          formData.append('file', file);
+          var _this = this;
+          await this.$api.exam.postExam_addNewExamRoom(formData)
+          .then(function (response) {
+                console.log(response);
+                _this.$message({
+                message: '添加学生名单成功',
+                type: 'success'
+                });
+                // _this.addOuterVisible = false;
+                _this.uploadVisible = false;
+                _this.setRoomID = '';
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+            this.initCheckTest();
+        }
       }
     }
   </script>
@@ -486,7 +564,7 @@
         margin-top: 10px;
     }
     .class-info-button {
-        margin-left: 37%;
+        margin-left: 25%;
         margin-top: 10px;
         margin-bottom: 10px;
     }
