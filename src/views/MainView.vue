@@ -135,6 +135,10 @@ import sideBar from '@/components/sideBar.vue'
       header1, 
       sideBar
     },
+    beforeRouteEnter(to, from, next) {
+      document.title = 'Platform'
+      next()
+    },
     created() {
       this.getAllClasses();
     },
@@ -330,6 +334,7 @@ import sideBar from '@/components/sideBar.vue'
   .main_part {
     background-color: rgb(244, 243, 243);
     flex-grow: 80;
+    /* min-height: 1000px; */
   }
   .father {
     display: flex;

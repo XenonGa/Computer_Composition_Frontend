@@ -20,10 +20,10 @@
             <i class="el-icon-menu"></i>
             <span slot="title">考试</span>
           </el-menu-item>
-          <el-menu-item index="3">
+          <!-- <el-menu-item index="3">
             <i class="el-icon-document"></i>
             <span slot="title">数据分析</span>
-          </el-menu-item>
+          </el-menu-item> -->
           <el-menu-item index="settings">
             <i class="el-icon-setting"></i>
             <span slot="title">设置</span>
@@ -79,7 +79,7 @@
       flex-grow: 1;
       font-size: 20px;
       width: 280px;
-      /* background-color: rgb(244, 243, 243); */
+      background-color: rgb(244, 243, 243);
     }
   </style>
   

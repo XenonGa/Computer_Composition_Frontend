@@ -71,3 +71,12 @@ export function postExam_getInformation(data) {
         data,
     })
 }
+
+export function postExam_downloadStudentInfo(data) {
+    return request({
+        method: 'POST',
+        url: `/myapp/export_exam_room_list`,
+        data,
+        responseType: 'blob'
+    })
+}

@@ -39,6 +39,10 @@
             password: '',
         };
       },
+      beforeRouteEnter(to, from, next) {
+        document.title = 'Platform'
+        next()
+        },
       methods: {
         handleLogin() {
             // 拿取秘钥

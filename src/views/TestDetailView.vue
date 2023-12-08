@@ -40,7 +40,8 @@
                     <el-button type="success" round style="margin-left: 50px;" @click="selectClassroom">选择考场</el-button>
                     <el-button type="info" round style="margin-left: 30px;" @click="setInfoVisible = true">设置信息</el-button>
                     <el-button type="primary" round style="margin-left: 30px;" @click="beginInvigilating">开始监考</el-button>
-                </div>
+                    <el-button type="primary" round style="margin-left: 30px;" @click="downloadStudentInfo">导出学生名单</el-button>
+                  </div>
                 <div class="draw_table" :style="{ width: tableWidth }">
                     <seatInExam v-for="index in row * column" 
                     :key="index"
@@ -429,6 +430,27 @@
                   console.log(error);
               });
         },
+        downloadStudentInfo() {
+          const send_message_to_backend = JSON.stringify({
+              "er_id": this.selectedExactRoom,
+          });
+          var _this = this;
+          const fileName = this.selectedExactRoom + ".xlsx";
+          this.$api.exam.postExam_downloadStudentInfo(send_message_to_backend) 
+              .then(function (response) {
+                console.log(response);
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', fileName); // Replace with the actual file name
+                document.body.appendChild(link);
+                link.click();
+                link.parentNode.removeChild(link);
+              })
+              .catch(function (error) {
+                  console.log(error);
+              });
+        },
       }
     }
   </script>
@@ -466,6 +488,7 @@
     .class-info-button {
         margin-left: 37%;
         margin-top: 10px;
+        margin-bottom: 10px;
     }
     .father {
       display: flex;
