@@ -88,11 +88,36 @@ export function postExam_downloadStudentInfo(data) {
     })
 }
 
+export function postExam_downloadFinalStudentInfo(data) {
+    return request({
+        method: 'POST',
+        url: `/myapp/export_register_leave_list`,
+        data,
+        responseType: 'blob'
+    })
+}
+
 export function postExam_addNewExamRoom(data) {
     return request({
         method: 'POST',
         url: `/myapp/add_new_exam_room`,
         data,
         headers: { 'Content-Type': 'multipart/form-data' }
+    })
+}
+
+export function postExam_signOutStudent(data) {
+    return request({
+        method: 'POST',
+        url: `/myapp/student_leave`,
+        data,
+    })
+}
+
+export function postExam_oneTapSignOutStudents(data) {
+    return request({
+        method: 'POST',
+        url: `/myapp/all_leave`,
+        data,
     })
 }

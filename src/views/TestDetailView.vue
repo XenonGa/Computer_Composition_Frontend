@@ -40,6 +40,11 @@
                     
                     <el-button type="success" round style="margin-left: 50px;" @click="selectClassroom">选择考场</el-button>
                     <el-button type="info" round style="margin-left: 30px;" @click="setInfoVisible = true">设置信息</el-button>
+                    <el-button type="success" round style="margin-left: 30px;" @click="isSignIning = true" v-if="!isSignIning">开始签到</el-button>
+                    <el-button type="danger" round style="margin-left: 30px;" @click="isSignIning = false" v-else>结束签到</el-button>
+                    <el-button type="success" round style="margin-left: 30px;" @click="isSignOuting = true" v-if="!isSignOuting">开始签退</el-button>
+                    <el-button type="danger" round style="margin-left: 30px;" @click="isSignOuting = false" v-else>结束签退</el-button>
+                    <el-button type="success" round style="margin-left: 30px;" @click="oneTapSignOutStudents">一键签退</el-button>
                     <el-button type="primary" round style="margin-left: 30px;" @click="startInterval">开始监考</el-button>
                     <el-button type="primary" round style="margin-left: 30px;" @click="downloadStudentInfo">导出学生名单</el-button>
                   </div>
@@ -47,7 +52,10 @@
                     <seatInExam v-for="index in row * column" 
                     :key="index"
                     :seatData="seatArray[index - 1]"
-                    @seatClick="registerStudent(seatArray[index - 1])"></seatInExam>
+                    :isSignIning="isSignIning"
+                    :isSignOuting="isSignOuting"
+                    :index="index"
+                    @seatClick="signInOrSignOut(seatArray[index - 1])"></seatInExam>
                 </div>
             </div>
         </div>
@@ -190,6 +198,8 @@
           setInfoVisible: false,
           uploadVisible: false,
           intervalId: null,
+          isSignIning: false,
+          isSignOuting: false,
           setInfo: {
             cookie: '',
             lvt: '',
@@ -339,11 +349,15 @@
                         _this.seatArray[response.data.stu_infos[i].seat_x].isSubmitted = response.data.stu_infos[i].is_submit;
                         _this.seatArray[response.data.stu_infos[i].seat_x].studentID = response.data.stu_infos[i].stu_id;
                         _this.seatArray[response.data.stu_infos[i].seat_x].studentName = response.data.stu_infos[i].stu_name;
+                        _this.seatArray[response.data.stu_infos[i].seat_x].isOut = response.data.stu_infos[i].is_leave;
                         if(_this.seatArray[response.data.stu_infos[i].seat_x].isRegistered) {
                             _this.seatArray[response.data.stu_infos[i].seat_x].statement = '已签到';
                         }
                         else {
                             _this.seatArray[response.data.stu_infos[i].seat_x].statement = '未签到';
+                        }
+                        if(_this.seatArray[response.data.stu_infos[i].seat_x].isOut) {
+                          _this.seatArray[response.data.stu_infos[i].seat_x].statement = '已签退';
                         }
                     }
                 })
@@ -367,11 +381,8 @@
               });
             }
         },
-        registerStudent(seat) {
-            if(seat.isRegistered) {
-                console.log('1111');
-            }
-            
+        signInOrSignOut(seat) {
+          if(this.isSignIning) {
             const send_message_to_backend = JSON.stringify({
                 "room_id": this.selectedExactRoom,
                 "seat_num": seat.num,
@@ -385,6 +396,23 @@
                 .catch(function (error) {
                     console.log(error);
                 });
+          }  
+          else if(this.isSignOuting) {
+            const send_message_to_backend = JSON.stringify({
+                "room_id": this.selectedExactRoom,
+                "seat_num": seat.num,
+                "is_leave": seat.isOut
+            });
+            var _this = this;
+            this.$api.exam.postExam_signOutStudent(send_message_to_backend) 
+                .then(function (response) {
+                    console.log(response);
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+          }
+            
         },
         setInfoForExam() {
           if(this.setInfo.cookie !== '') {
@@ -484,7 +512,7 @@
           });
           var _this = this;
           const fileName = this.selectedExactRoom + ".xlsx";
-          this.$api.exam.postExam_downloadStudentInfo(send_message_to_backend) 
+          this.$api.exam.postExam_downloadFinalStudentInfo(send_message_to_backend) 
               .then(function (response) {
                 console.log(response);
                 const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -528,7 +556,24 @@
                 console.log(error);
             });
             this.initCheckTest();
-        }
+        }, 
+        oneTapSignOutStudents() {
+          let roomIDList = [];
+          console.log("111" + this.selectedExactRoom)
+          roomIDList.push(parseInt(this.selectedExactRoom));
+          const send_message_to_backend = JSON.stringify({
+              "room_id_list": roomIDList
+          });
+          console.log(send_message_to_backend)
+          this.$api.exam.postExam_oneTapSignOutStudents(send_message_to_backend) 
+            .then(function (response) {
+              console.log(response);
+              location.reload();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        },
       }
     }
   </script>
@@ -628,6 +673,7 @@
     .row-and-column {
         display: flex;
         margin-top: 20px;
+        flex-wrap: wrap;
     }
     .row {
         font-size: 25px;

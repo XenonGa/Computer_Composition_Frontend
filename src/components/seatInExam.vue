@@ -1,6 +1,6 @@
 <template>
-    <div :class="['seat_block', { 'clicked': seatData.isClicked, 'registered': seatData.isRegistered,
-                                  'submitted': seatData.isSubmitted }]" @click="handleClick">
+    <div :class="['seat_block' ,'seat_block' + index, { 'clicked': seatData.isClicked, 'registered': seatData.isRegistered,
+                                  'submitted': seatData.isSubmitted, 'out': seatData.isOut }]" @click="handleClick">
       <div class="text">  
         {{ seatData.num }}
       </div>
@@ -18,7 +18,7 @@
   
   <script>
     export default {
-      props: ['seatData'],
+      props: ['seatData', 'isSignIning', 'isSignOuting', 'index'],
       data() {
         return {
           isClicked: false,
@@ -27,15 +27,36 @@
       },
       methods: {
         handleClick() {
+          // console.log(this.seatData.isRegistered)
+          // console.log(this.seatData.isOut)
             if(this.seatData.num === '') {
                 return;
             }
-            this.seatData.isRegistered = !this.seatData.isRegistered;
-            if(this.seatData.isRegistered) {
-                this.seatData.statement = '已签到';
+            if(this.isSignIning) {
+              this.seatData.isRegistered = !this.seatData.isRegistered;
+              if(this.seatData.isRegistered) {
+                  this.seatData.statement = '已签到';
+              }
+              else {
+                  this.seatData.statement = '未签到';
+              }
             }
-            else {
-                this.seatData.statement = '未签到';
+            else if(this.isSignOuting) {
+              this.seatData.isOut = !this.seatData.isOut;
+              const seatBlock = document.querySelector('.seat_block' + this.index);
+              console.log(seatBlock)
+              // 如果找到了元素，则更改其背景颜色
+              if (seatBlock) {
+                if(this.seatData.isOut === true) 
+                {
+                  seatBlock.style.backgroundColor = '#ff0000';
+                  this.seatData.statement += ' 已签退';
+                }
+                else {
+                  seatBlock.style.backgroundColor = '#409EFF';
+                  this.seatData.statement = this.seatData.statement.replace(" 已签退", "");
+                }
+              }
             }
             this.$emit('seatClick', { isClicked: this.isClicked, text: this.text });
         },
@@ -62,51 +83,27 @@
 
     .clicked {
         background-color: #E6A23C;
-        width: 100px;
-        height: 100px;
-        cursor: pointer;
-        border-radius: 10px;
-        margin-right: 10px;
-        margin-bottom: 10px;
     }
     .clicked:hover {
         background-color: #ffbf5f;
-        width: 100px;
-        height: 100px;
-        cursor: pointer;
-        border-radius: 10px;
     }
     .registered {
         background-color: #409EFF;
-        width: 100px;
-        height: 100px;
-        cursor: pointer;
-        border-radius: 10px;
-        margin-right: 10px;
-        margin-bottom: 10px;
     }
     .registered:hover {
         background-color: #5badff;
-        width: 100px;
-        height: 100px;
-        cursor: pointer;
-        border-radius: 10px;
     }
     .submitted {
       background-color: #67C23A;
-        width: 100px;
-        height: 100px;
-        cursor: pointer;
-        border-radius: 10px;
-        margin-right: 10px;
-        margin-bottom: 10px;
     }
     .submitted:hover {
         background-color: #81ca5d;
-        width: 100px;
-        height: 100px;
-        cursor: pointer;
-        border-radius: 10px;
+    }
+    .out {
+      background-color: #ff0000;
+    }
+    .out:hover {
+        background-color: #ff2e2e;
     }
     .text {
       font-size: 15px;
